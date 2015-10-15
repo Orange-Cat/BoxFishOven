@@ -1,7 +1,7 @@
 //
 // Title: Arduino PID Sequencer
 // Author: Orange Cat
-// Date: 10-11-2015
+// Date: 15-10-2015
 //
 // Allows setting up a sequence of PID operations (i.e. PID paramaters (setpoint, Kp, Ki, Kd) plus ramp times and hold times).
 // When the setpoint and hold time is reached (within epsilon of being reached) it will move onto the next operation in the sequence.

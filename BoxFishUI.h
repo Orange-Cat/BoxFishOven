@@ -1,7 +1,7 @@
 //
 // Title: BoxFish UI
 // Author: Orange Cat
-// Date: 10-11-2015
+// Date: 15-10-2015
 //
 // BoxFishUI is a class to implement a consistent user interface on 2x16 line displays
 // it divides the display up into 3 parts. The top line is reserved for the menu system. The bottom line is split into left (info) and right (status).
@@ -22,6 +22,10 @@
 #include "MenuBackend.h"
 #include <String.h>
 
+// define to use the Adafruit LCD.
+#define BOXFISH_USE_ADAFRUIT_LCD
+
+
 typedef enum {
   kBoxFishButtonNone,
   kBoxFishButtonUp = 0x01,
@@ -33,8 +37,9 @@ typedef enum {
 
 typedef void (*BoxFishMenuCallback)(int);
 
-static const char kBoxFishDegreeChar = 1;
-
+static const char kBoxFishDegreeChar = '\1';   // character which prints a degree symbol on the LCD display
+static const unsigned long kDebouceDelay = 20;   // key debouce delay in milliseconds
+  
 class BoxFishUI {
   public:
     void begin(const char program_name[], const char program_version[], BoxFishMenuCallback callback);
@@ -56,8 +61,13 @@ class BoxFishUI {
   private:
     MenuBackend menu_;
     BoxFishButton button_state_;
-
+    BoxFishButton last_button_reading_;
+    BoxFishButton debounced_button_;
+    unsigned long debounce_time_;
+    
   private:
+    static void menuChangeEventCallback(MenuChangeEvent changed);
+    static void menuUseEventCallback(MenuUseEvent used);
     void lcdSetup();
     void displaySplash();
     BoxFishButton debounce(BoxFishButton button);

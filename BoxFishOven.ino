@@ -1,7 +1,7 @@
 //
 // Title: BoxFishOven Controller
 // Author: Orange Cat
-// Date: 10-11-2015 
+// Date: 15-10-2015
 // 
 // The BoxFishOven controller supports multiple reflow and annealing profiles
 // selectable from the LCD display and a design that makes it easy to add new profiles.
@@ -38,20 +38,14 @@
 #include "MenuBackend.h"
 #include "PIDSeq.h"
 #include "BoxFishUI.h"
-
-// define to use the Adafruit LCD. Other than for simulation, it is the only LCD supported.
-// also needs to be defined the same in BoxFishUI.cpp
-#define BOXFISH_USE_ADAFRUIT_LCD
-
-// define to simulate temperature rises and falls in the oven, instead of reading the temperature sensor
-//#define BOXFISH_OVEN_SIMULATE
-
-
-#ifdef BOXFISH_USE_ADAFRUIT_LCD
+#ifdef BOXFISH_USE_ADAFRUIT_LCD  // BOXFISH_USE_ADAFRUIT_LCD is defined (or not) in BoxFishUI.cpp
   #include <Adafruit_RGBLCDShield.h>
 #else
   #include <LiquidCrystal.h>
 #endif
+
+// define to simulate temperature rises and falls in the oven, instead of reading the temperature sensor
+//#define BOXFISH_OVEN_SIMULATE
 
 const char kBoxFishOvenVersion[] = "1.0";
 const char kBoxFishOvenProgramName[] =  "BoxFishOven";
@@ -330,7 +324,7 @@ void readThermocouple()
   // simulate oven's temperature based on the control variable (time elements are on, strength of blower)
   
   // average the control variable for heating over time to simulate thermal mass
-  const int kNumAverage = 12;
+  const int kNumAverage = 11;
   static double thermal_mass[kNumAverage] ;
 
   double heating_control;
@@ -471,7 +465,7 @@ void jobBegin()
   delay(1000);
   jobSeconds  = 0;
 
-  // we reset the sequence, and then add PID operations
+  // we setup the oven PID sequencing and our sample time
   ovenSeq.begin();
   ovenSeq.setSampleTime(kPIDSampleTime);
 }

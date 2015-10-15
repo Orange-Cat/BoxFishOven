@@ -1,7 +1,7 @@
 //
 // Title: BoxFish UI
 // Author: Orange Cat
-// Date: 10-11-2015
+// Date: 15-10-2015
 //
 // License:
 //   This firmware is released under the Creative Commons Attribution-ShareAlike 4.0
@@ -12,12 +12,7 @@
 #include <String.h>
 #include "BoxFishUI.h"
 
-// define to use the Adafruit LCD.
-#define BOXFISH_USE_ADAFRUIT_LCD
-
-
-#ifdef BOXFISH_USE_ADAFRUIT_LCD
-  //#include <Adafruit_MCP23017.h>
+#ifdef BOXFISH_USE_ADAFRUIT_LCD  // BOXFISH_USE_ADAFRUIT_LCD is defined (or not) in BoxFishUI.cpp
   #include <Adafruit_RGBLCDShield.h>
 #else
   #include <LiquidCrystal.h>
@@ -40,17 +35,16 @@ static LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
 #endif
 
 static BoxFishMenuCallback callback_func = NULL;
-
-static void menuChangeEventCallback(MenuChangeEvent changed);
-static void menuUseEventCallback(MenuUseEvent used);
-
 static const char* prog_name = "";
 static const char* prog_version = "";
 
 
 BoxFishUI::BoxFishUI()
   :menu_(menuUseEventCallback, menuChangeEventCallback),
-  button_state_(kBoxFishButtonNone)
+  button_state_(kBoxFishButtonNone),
+  last_button_reading_(kBoxFishButtonNone),
+  debounced_button_(kBoxFishButtonNone),
+  debounce_time_(0)
 {
   return;
 }
@@ -60,7 +54,7 @@ MenuItemRef BoxFishUI::getRootMenu()
   return menu_.getRoot();
 }
 
-static void menuUseEventCallback(MenuUseEvent used)
+void BoxFishUI::menuUseEventCallback(MenuUseEvent used)
 {
   // callled when a menu item is selected
 
@@ -126,11 +120,13 @@ void BoxFishUI::lcdSetup()
   lcd.begin(16, 2);
 
 #ifndef BOXFISH_USE_ADAFRUIT_LCD
-  pinMode( buttonPin, INPUT );         //ensure A0 is an input
-  digitalWrite( buttonPin, LOW );      //ensure pullup is off on A0
-
-  digitalWrite( backlightPin, HIGH );  //backlight control pin D3 is high (on)
-  pinMode( backlightPin, OUTPUT );     //D3 is an output
+  // all buttons connected to one analog input:
+  pinMode(buttonPin, INPUT);
+  digitalWrite(buttonPin, LOW);
+  
+  // turn on backlight
+  digitalWrite(backlightPin, HIGH);
+  pinMode(backlightPin, OUTPUT);
 #endif
 
   // create degree character for LCD as char kBoxFishDegreeChar
@@ -155,7 +151,7 @@ void BoxFishUI::begin(const char program_name[], const char program_version[], B
   }
 }
 
-static void menuChangeEventCallback(MenuChangeEvent changed)
+void BoxFishUI::menuChangeEventCallback(MenuChangeEvent changed)
 {
   // called when the menu system is traversed
   MenuItem new_menu = changed.to;
@@ -221,26 +217,22 @@ BoxFishButton BoxFishUI::debounce(BoxFishButton button_reading)
   // simple debouce method, if button is stable for kDebouceDelay milliseconds
   // and it'state has changed, then the button is returned, otherwise just
   // returns no button.
-  static const long kDebouceDelay = 20;   // in milliseconds
-  static BoxFishButton last_button_reading = kBoxFishButtonNone;
-  static BoxFishButton debounced_button = kBoxFishButtonNone;
-  static long debounce_time = millis();
 
-  if (button_reading != last_button_reading) {
+  if (button_reading != last_button_reading_) {
     // button status has changed, we reset the debounce time
     // and return no button as at the moment the button is not stable
-    last_button_reading = button_reading;
-    debounce_time = millis();
+    last_button_reading_ = button_reading;
+    debounce_time_ = millis();
     return kBoxFishButtonNone;
   }
 
-  if ((millis() - debounce_time) > kDebouceDelay) {
+  if ((millis() - debounce_time_) > kDebouceDelay) {
     // button is stable
-    if (button_reading != debounced_button) {
+    if (button_reading != debounced_button_) {
        // it's new so return this state
-       last_button_reading = button_reading;
-       debounced_button = button_reading;
-       return debounced_button;
+       last_button_reading_ = button_reading;
+       debounced_button_ = button_reading;
+       return debounced_button_;
     }
   }
   return kBoxFishButtonNone;
@@ -276,14 +268,14 @@ BoxFishButton BoxFishUI::readButton()
   }
 #else
   // ADC readings expected for the 5 buttons on the ADC input
-  static const unsigned int kButtonRes10BitRight = 0;
-  static const unsigned int kButtonRes10BitUp = 145;
-  static const unsigned int kButtonRes10BitDown = 329;
-  static const unsigned int kButtonRes10BitLeft = 505;
-  static const unsigned int kButtonRes10BitSelect = 741;
-  static const unsigned int kButtonResTolerance = 10;   // we accept +/- this many ADC counts from the expected reading
+  const unsigned short kButtonRes10BitRight = 0;
+  const unsigned short kButtonRes10BitUp = 145;
+  const unsigned short kButtonRes10BitDown = 329;
+  const unsigned short kButtonRes10BitLeft = 505;
+  const unsigned short kButtonRes10BitSelect = 741;
+  const unsigned short kButtonResTolerance = 10;   // we accept +/- this many ADC counts from the expected reading
 
-  unsigned int button_adc;
+  unsigned short button_adc;
 
   //read the button ADC pin voltage
   button_adc = analogRead(buttonPin);

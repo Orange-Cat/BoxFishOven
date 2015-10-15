@@ -1,7 +1,7 @@
 //
 // Title: Arduino PID Sequencer
 // Author: Orange Cat
-// Date: 10-11-2015
+// Date: 15-10-2015
 //
 // License:
 //   This firmware is released under the Creative Commons Attribution-ShareAlike 4.0
@@ -195,7 +195,7 @@ void PIDSeq::configPIDForCurrentOp()
 
 bool PIDSeq::isSetpointReached()
 {
-  // returns true if ramp is complete and we are within epsilon of our target
+  // returns true if ramp is complete and we are within epsilon of our target (i.e. final) setpoint
 
   if ((ramp_slope_ > 0.0 && cur_setpoint_ < cur_op_->setpoint_) || (ramp_slope_ < 0.0 && cur_setpoint_ > cur_op_->setpoint_)) {
     // we are still ramping

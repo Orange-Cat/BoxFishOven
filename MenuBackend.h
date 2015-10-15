@@ -10,10 +10,11 @@
    || | Provide an easy way of making menus
    ||
    || @changes
-   || | Orange Cat: a few backwards compatible chages:
-   || |    add toRoot()
-   || |    add setLeft() and alternative setBack (using pass by reference)
-   || |    provide a typedef (MenuItemRef) for use with getRoot()
+   || | Orange Cat (15-10-2015): a few backwards compatible chages:
+   || |    add toRoot(),
+   || |    add setLeft() and alternative setBack (using pass by reference),
+   || |    provide a typedef (MenuItemRef) for use with getRoot(),
+   || |    inline operator overloading
    ||
    || #
    || @license
