@@ -44,6 +44,7 @@
   #include <LiquidCrystal.h>
 #endif
 
+
 // define to simulate temperature rises and falls in the oven, instead of reading the temperature sensor
 //#define BOXFISH_OVEN_SIMULATE
 
@@ -346,8 +347,11 @@ void readThermocouple()
   
   double average_heating_control = sum / kNumAverage;
 
+  // we determine the heat transfer from the elements assuming the surface temp is 1000C
+  double element_heat_transfer = 1.0 - (temperature / 1000.0);
+
   // we estimate the heating from the elements (note that when we start cooling the elements will still be hot even though off)
-  temperature += 2.1 * average_heating_control / kWindowSize;
+  temperature += 2.1 * element_heat_transfer * average_heating_control / kWindowSize;
 
   // subtract the estimated heat loss at this temperature
   double heat_loss = ((temperature - 20.0) / 330.0);
@@ -489,7 +493,7 @@ void startReflow(double reflow_temperature)
 
   // preheat: raise temperature quickly to 150C
   preheat.begin(150.0, 112.0, 0.02, 252.0);
-  preheat.setEpsilon(2.5);
+  preheat.setEpsilon(4.0);
   preheat.setControlLimits(0.0, kWindowSize);
   preheat.setName("Preheat");
   ovenSeq.addOp(preheat);
