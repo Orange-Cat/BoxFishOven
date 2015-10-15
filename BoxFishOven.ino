@@ -38,7 +38,7 @@
 #include "MenuBackend.h"
 #include "PIDSeq.h"
 #include "BoxFishUI.h"
-#ifdef BOXFISH_USE_ADAFRUIT_LCD  // BOXFISH_USE_ADAFRUIT_LCD is defined (or not) in BoxFishUI.cpp
+#ifdef BOXFISH_USE_ADAFRUIT_LCD  // BOXFISH_USE_ADAFRUIT_LCD is defined (or not) in BoxFishUI.h
   #include <Adafruit_RGBLCDShield.h>
 #else
   #include <LiquidCrystal.h>
