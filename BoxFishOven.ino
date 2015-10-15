@@ -48,17 +48,23 @@
 // define to simulate temperature rises and falls in the oven, instead of reading the temperature sensor
 //#define BOXFISH_OVEN_SIMULATE
 
-const char kBoxFishOvenVersion[] = "1.0";
+const char kBoxFishOvenVersion[] = "1.1";
 const char kBoxFishOvenProgramName[] =  "BoxFishOven";
 
 typedef enum {
+  // start numbering at 1, because 0 indicates no menu item
   kBoxFishMenuItemLeaded = 1,
   kBoxFishMenuItemLeadFree,
+  
+  kBoxFishMenuItemSetThickness,
+        
+  kBoxFishMenuItemAcrylic,
   kBoxFishMenuItemPolycarbonate,
+  kBoxFishMenuItemAcetal,
+  
   kBoxFishMenuItemRapidCool,
   kBoxFishMenuItemReset
 } BoxFishMenuItem;
-
 
 // Pin assignments
 #ifdef BOXFISH_USE_ADAFRUIT_LCD
@@ -97,6 +103,8 @@ double setpoint;             // current internal setpoint of PID
 double temperature = 20.0;   // current process variable (temperature)
 double control;              // current control variable
 unsigned long windowStartTime;
+
+double mmThickness = 10.0;   // thickness of plastic in mm (for annealing)
 
 bool isRunning = false;
 bool isCooling = false;
@@ -291,37 +299,9 @@ void updateStatus()
   }
 }
 
-void readThermocouple()
+#ifdef BOXFISH_OVEN_SIMULATE
+void simulateOven()
 {
-#ifndef BOXFISH_OVEN_SIMULATE
-  static MAX31855 thermocouple(thermocoupleDOPin, thermocoupleCSPin, thermocoupleCLKPin);
-  static int errCount = 0;
-
-  // read current temperature
-  float temp_temp = thermocouple.readThermocouple(CELSIUS);
-
-  // If thermocouple problem detected
-  if ((temp_temp == FAULT_OPEN) || (temp_temp == FAULT_SHORT_GND) || (temp_temp == FAULT_SHORT_VCC)) {
-    errCount++;
-  }
-  else if (temp_temp <  0.001 || temp_temp > kTemperatureMax) {
-    // if the i2c amp itself isn't connected, the temperature returned can be 0.0
-    // and if the temperture exceeds the maximum it's also treated as an error
-    errCount++;
-  }
-  else {
-    // no error, reset error count, we only count consecutive errors
-    errCount = 0;
-    temperature = temp_temp;
-  }
-
-  // too many consecutive errors and we abort
-  if (errCount > kMaxErrors) {
-    isError = true;
-    ovenSeq.abort();
-    errCount = 0;
-  }
-#else
   // simulate oven's temperature based on the control variable (time elements are on, strength of blower)
   
   // average the control variable for heating over time to simulate thermal mass
@@ -361,6 +341,41 @@ void readThermocouple()
   if (isCooling) {
     temperature -= (1.85 * control / 255.0) * heat_loss;
   }
+}
+#endif
+
+void readThermocouple()
+{
+#ifndef BOXFISH_OVEN_SIMULATE
+  static MAX31855 thermocouple(thermocoupleDOPin, thermocoupleCSPin, thermocoupleCLKPin);
+  static int errCount = 0;
+
+  // read current temperature
+  float temp_temp = thermocouple.readThermocouple(CELSIUS);
+
+  // If thermocouple problem detected
+  if ((temp_temp == FAULT_OPEN) || (temp_temp == FAULT_SHORT_GND) || (temp_temp == FAULT_SHORT_VCC)) {
+    errCount++;
+  }
+  else if (temp_temp <  0.001 || temp_temp > kTemperatureMax) {
+    // if the i2c amp itself isn't connected, the temperature returned can be 0.0
+    // and if the temperture exceeds the maximum it's also treated as an error
+    errCount++;
+  }
+  else {
+    // no error, reset error count, we only count consecutive errors
+    errCount = 0;
+    temperature = temp_temp;
+  }
+
+  // too many consecutive errors and we abort
+  if (errCount > kMaxErrors) {
+    isError = true;
+    ovenSeq.abort();
+    errCount = 0;
+  }
+#else
+  simulateOven();
 #endif
 }
 
@@ -376,8 +391,13 @@ void buildMenus()
   static MenuItem mi_reflow_lead_free_use = MenuItem("Run Lead Free", kBoxFishMenuItemLeadFree);
 
   static MenuItem mi_anneal = MenuItem("[Anneal]");
+  static MenuItem mi_anneal_thickness = MenuItem("[Set Thickness]", kBoxFishMenuItemSetThickness);
+  static MenuItem mi_anneal_acrylic = MenuItem("[Acrylic]");
+  static MenuItem mi_anneal_acrylic_use = MenuItem("Run Acrylic", kBoxFishMenuItemAcrylic);
   static MenuItem mi_anneal_polycarbonate = MenuItem("[Polycarbonate]");
   static MenuItem mi_anneal_polycarbonate_use = MenuItem("Run Polycarbonate", kBoxFishMenuItemPolycarbonate);
+  static MenuItem mi_anneal_acetal = MenuItem("[Acetal]");
+  static MenuItem mi_anneal_acetal_use = MenuItem("Run Acetal", kBoxFishMenuItemAcetal);
 
   static MenuItem mi_rapid = MenuItem("[Rapid Cool]");
   static MenuItem mi_rapid_use = MenuItem("Run Rapid Cool", kBoxFishMenuItemRapidCool);
@@ -405,11 +425,16 @@ void buildMenus()
   mi_reflow_lead.addRight(mi_reflow_lead_use);
   mi_reflow_lead_free.addRight(mi_reflow_lead_free_use);
 
-  mi_anneal.addRight(mi_anneal_polycarbonate);
+  mi_anneal.addRight(mi_anneal_thickness).add(mi_anneal_acrylic).add(mi_anneal_polycarbonate).add(mi_anneal_acetal);
+  mi_anneal_thickness.setLeft(mi_anneal);
+  mi_anneal_acrylic.setLeft(mi_anneal);
   mi_anneal_polycarbonate.setLeft(mi_anneal);
-
+  mi_anneal_acetal.setLeft(mi_anneal);
+      
+  mi_anneal_acrylic.addRight(mi_anneal_acrylic_use);
   mi_anneal_polycarbonate.addRight(mi_anneal_polycarbonate_use);
-
+  mi_anneal_acetal.addRight(mi_anneal_acetal_use);
+      
   mi_rapid.addRight(mi_rapid_use);
 
   mi_system.addRight(mi_system_reset).add(mi_system_version);
@@ -425,6 +450,8 @@ void menuItemWasSelected(int item)
   // this function is called when the user selects one of the menu items where a second
   // argument was passed to MenuItem during creation. The name of this function is
   // passed to ui.begin() in setup().
+
+  unsigned long hold_time_min = (mmThickness/6.35) * 30.0 + 0.5;
   
   switch (item) {
     case kBoxFishMenuItemLeadFree:
@@ -435,8 +462,20 @@ void menuItemWasSelected(int item)
       startReflow(225.0);
       break;
 
+    case kBoxFishMenuItemSetThickness:
+      menuSetThickness();
+      break;
+
+    case kBoxFishMenuItemAcrylic:
+      startAnneal(82.0, 2*60, hold_time_min, 27.8);
+      break;
+
     case kBoxFishMenuItemPolycarbonate:
-      startPolycarbonate();
+      startAnneal(135.0, 4*60, hold_time_min, 27.8);
+      break;
+      
+    case kBoxFishMenuItemAcetal:
+      startAnneal(160.0, 4*60, hold_time_min, 27.8);
       break;
 
     case kBoxFishMenuItemRapidCool:
@@ -447,11 +486,57 @@ void menuItemWasSelected(int item)
       ovenSeq.abort();
       ui.menuGotoRoot();
       break;
-      
+
     default:
       // do nothing
       break;
   }
+}
+
+void menuDisplayThickness()
+{
+  String thickness;
+
+  thickness = String(mmThickness, 0) + "mm";
+  ui.displayOverwriteMenu(thickness);
+}
+
+void menuSetThickness()
+{
+  // we allow the user to set the thickness in 5mm increments.
+  const double kThicknessIncrement = 5.0;
+  const double kMaxThickness = 300.0;
+  BoxFishButton button;
+  bool selectingThickness = true;
+
+  menuDisplayThickness();
+  while (selectingThickness) {
+    button = ui.readButton();
+    switch (button) {
+      case kBoxFishButtonRight:
+      case kBoxFishButtonLeft:
+      case kBoxFishButtonSelect:
+        selectingThickness = false;
+        break;
+        
+      case kBoxFishButtonUp:
+        if (mmThickness < kMaxThickness-kThicknessIncrement) {
+          mmThickness += kThicknessIncrement;
+        }
+        break;
+        
+      case kBoxFishButtonDown:
+        if (mmThickness > kThicknessIncrement) {
+          mmThickness -= kThicknessIncrement;
+        }
+
+      default:
+        // do nothing
+        break;
+    }
+    menuDisplayThickness();
+  }
+  ui.redisplayCurrentMenu();
 }
 
 
@@ -459,13 +544,12 @@ void menuItemWasSelected(int item)
 PIDOp preheat;
 PIDOp soak;
 PIDOp reflow;
-PIDOp reduce;
 PIDOp cool;
 
-void jobBegin()
+void ovenBegin()
 {
   // display a message and reset the job timer
-  ui.displayInfo("Starting");
+  ui.displayInfo("Start");
   delay(1000);
   jobSeconds  = 0;
 
@@ -474,7 +558,7 @@ void jobBegin()
   ovenSeq.setSampleTime(kPIDSampleTime);
 }
 
-void jobRun()
+void ovenRun()
 {
   isRunning = true;
   windowStartTime = millis();  
@@ -489,7 +573,7 @@ void startReflow(double reflow_temperature)
   //  http://www.compuphase.com/electronics/reflowsolderprofiles.htm
 
   // ready for a new job
-  jobBegin();
+  ovenBegin();
 
   // preheat: raise temperature quickly to 150C
   preheat.begin(150.0, 112.0, 0.02, 252.0);
@@ -523,63 +607,52 @@ void startReflow(double reflow_temperature)
   ovenSeq.addOp(cool);
 
   // start the sequence
-  jobRun();
+  ovenRun();
 }
 
-void startPolycarbonate()
+void startAnneal(double hold_temp, unsigned long ramp_up_minutes, unsigned long hold_minutes, double ramp_down_deg_hour)
 {
-  // For profile see:
-  //  http://www.plasticsintl.com/documents/Polycarbonate%20Annealing.pdf
+  // All temps in C. For profiles (must convert F to C) see:
+  //  http://www.boedeker.com/anneal.htm
   
   // ready for a new job
-  jobBegin();
-
-  // hold varies for thickness of material (nominal 45 minutes)
-  unsigned long hold_time_minutes = 45;
+  ovenBegin();
   
   double epsilon = 3.0;
 
-  // slowly increase heat from room temperature to 120C over 10 hours
-  preheat.begin(120.0, 300.0, 0.03, 200.0);
-  preheat.setRampTime(10uL * 60uL * 60uL);
+  // slowly increase heat from room temperature to hold_temp (C) over ramp_up_minutes minnutes
+  preheat.begin(hold_temp, 300.0, 0.03, 200.0);
+  preheat.setRampTime(ramp_up_minutes * 60uL);
   preheat.setEpsilon(epsilon);
   preheat.setControlLimits(0.0, kWindowSize);
   preheat.setName("Slow Heat");
   ovenSeq.addOp(preheat);
 
-  // hold at 120C for hold_time_minutes minutes
-  soak.begin(120.0, 300.0, 0.02, 200.0);
-  soak.setHoldTime(hold_time_minutes * 60uL);
+  // hold at hold_temp for hold_minutes minutes
+  soak.begin(hold_temp, 300.0, 0.02, 200.0);
+  soak.setHoldTime(hold_minutes * 60uL);
   soak.setEpsilon(epsilon);
   soak.setControlLimits(0.0, kWindowSize);
   soak.setName("Hold");
   ovenSeq.addOp(soak);
   
-  // cool to 65C over 10 hours (note this is actually a heating cycle with decreasing setpoint)
-  reduce.begin(65.0, 300.0, 0.03, 200.0);
-  reduce.setRampTime(10uL * 60uL * 60uL);
-  reduce.setEpsilon(epsilon);
-  reduce.setControlLimits(0.0, kWindowSize);
-  reduce.setName("Slow Cool");
-  ovenSeq.addOp(reduce);
- 
-  // let cool to 30C for one hour on it's own (gain and control limits for blower set very low so it does not run)
-  cool.begin(30.0, 1.0, 0.0, 0.0);
-  cool.setRampTime(1uL * 60uL * 60uL);
-  cool.setReverse(true);
+  // cool to 30C at ramp_down_deg_hour degrees C/hr (note this is actually a heating cycle with decreasing setpoint)
+  unsigned long ramp_down_minutes = ((hold_temp - 30.0) * 60.0) / ramp_down_deg_hour + 0.5;
+  cool.begin(30.0, 300.0, 0.03, 200.0);
+  cool.setRampTime(ramp_down_minutes * 60uL);
   cool.setEpsilon(epsilon);
-  cool.setControlLimits(0.0, 1.0);
-  cool.setName("Final Cool");
+  cool.setControlLimits(0.0, kWindowSize);
+  cool.setName("Slow Cool");
   ovenSeq.addOp(cool);
 
   // start the sequence
-  jobRun();
+  ovenRun();
 }
 
 void startRapidCool()
 {
   // ready for a new job
-  jobBegin();
+  ovenBegin();
 
   // aggressively cool to 40.0C
   cool.begin(40.0 - 5.0, 38, 0.008, 32);
@@ -590,7 +663,7 @@ void startRapidCool()
   ovenSeq.addOp(cool);
   
   // start the sequence
-  jobRun();
+  ovenRun();
 }
 
 void elementsEnable(bool on)

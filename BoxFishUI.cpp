@@ -54,6 +54,21 @@ MenuItemRef BoxFishUI::getRootMenu()
   return menu_.getRoot();
 }
 
+MenuItemRef BoxFishUI::getCurrentMenu()
+{
+  return menu_.getCurrent();
+}
+
+void BoxFishUI::redisplayCurrentMenu()
+{
+  menuDisplayMenu(menu_.getCurrent());
+}
+
+void BoxFishUI::menuGotoRoot()
+{
+  menu_.toRoot();
+}
+
 void BoxFishUI::menuUseEventCallback(MenuUseEvent used)
 {
   // callled when a menu item is selected
@@ -108,6 +123,20 @@ void BoxFishUI::displayInfo(String info)
   }
 }
 
+void BoxFishUI::displayOverwriteMenu(String menu)
+{
+  // upper line, first 16 chars
+  lcd.setCursor(0, 0);
+
+  int i;
+  for (i=0; i < 16 && menu[i] != '\0'; i++) {
+    lcd.write(menu[i]);
+  }
+  while (i++ < 16) {
+    lcd.write(' ');
+  }
+}
+
 void BoxFishUI::beep()
 {
   if (buzzerPin != -1) {
@@ -154,22 +183,7 @@ void BoxFishUI::begin(const char program_name[], const char program_version[], B
 void BoxFishUI::menuChangeEventCallback(MenuChangeEvent changed)
 {
   // called when the menu system is traversed
-  MenuItem new_menu = changed.to;
-
-  // clear line and reset cursor
-  lcd.setCursor(0, 0);
-  lcd.print("                ");
-  lcd.setCursor(0, 0);
-
-  String name = String(new_menu.getName());
-  if (name == "MenuRoot") {
-    lcd.print("[");
-    lcd.print(prog_name);
-    lcd.print("]");
-  }
-  else {
-    lcd.print(name);
-  }
+  menuDisplayMenu(changed.to);
 }
 
 void BoxFishUI::menuNavigate()
@@ -207,9 +221,22 @@ void BoxFishUI::menuNavigate()
   }
 }
 
-void BoxFishUI::menuGotoRoot()
+void BoxFishUI::menuDisplayMenu(const MenuItem& menu)
 {
-  menu_.toRoot();
+  // clear line and reset cursor
+  lcd.setCursor(0, 0);
+  lcd.print("                ");
+  lcd.setCursor(0, 0);
+
+  String name = String(menu.getName());
+  if (name == "MenuRoot") {
+    lcd.print("[");
+    lcd.print(prog_name);
+    lcd.print("]");
+  }
+  else {
+    lcd.print(name);
+  }
 }
 
 BoxFishButton BoxFishUI::debounce(BoxFishButton button_reading)

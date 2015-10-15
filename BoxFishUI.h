@@ -44,13 +44,16 @@ class BoxFishUI {
   public:
     void begin(const char program_name[], const char program_version[], BoxFishMenuCallback callback);
     MenuItemRef getRootMenu();
-
+    MenuItemRef getCurrentMenu();
+    
     void menuNavigate();        // call each time through loop()
     void menuGotoRoot();
 
     void displayStatus(String stat);
     void displayInfo(String info);
-
+    void displayOverwriteMenu(String menu);
+    void redisplayCurrentMenu();
+    
     void beep();
     BoxFishButton readButton();
     BoxFishButton lastButton();
@@ -68,6 +71,7 @@ class BoxFishUI {
   private:
     static void menuChangeEventCallback(MenuChangeEvent changed);
     static void menuUseEventCallback(MenuUseEvent used);
+    static void menuDisplayMenu(const MenuItem& menu);
     void lcdSetup();
     void displaySplash();
     BoxFishButton debounce(BoxFishButton button);
