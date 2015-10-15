@@ -4,6 +4,8 @@ The target oven has two SSRs controlling the top and bottom elements (although w
 
 Built to run on an Arduino Uno or similar with the Adafruit LCD shield and a MAX31855 thermocouple board, plus transistor/mosfet drivers for all the relays.
 
+A built-in simulator allows the program to be tested and evaluted without any special hardware (thermocouple or relays or an oven).
+
 **Required Libraries:**
 * Arduino PID Library ( https://github.com/br3ttb/Arduino-PID-Library )
 * MAX31855 Library for reading the thermocouple temperature ( https://github.com/rocketscream/MAX31855 )
