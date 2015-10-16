@@ -87,7 +87,7 @@ const int kMaxErrors = 10;               // after this many errors we quit
 const double kTemperatureFanMin = 40.0;  // keep internal fan on until it cools to this temperture after cycle is complete
 const double kTemperatureMax = 280.0;    // abort if temp rises above this
 const int kBlowerPWMMax = 127;           // maximum blower PWM (out of 0-255)
-const double kBoxFishTemperatureError = -300.0;    // if temperature exceeds this we abort
+const double kBoxFishTemperatureError = -300.0;    // we use this temperature to indicate a temperature read error
 
 // The window size is the number of milliseconds over which we time slice the elements being on/off,
 // so if we need half power heating, we will turn the elements on for half of the window size of off for the other half.
