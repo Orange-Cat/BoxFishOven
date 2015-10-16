@@ -16,15 +16,14 @@
 // Required Libraries:
 //   Arduino PID Library ( https://github.com/br3ttb/Arduino-PID-Library )
 //   MAX31855 Library for reading the thermocouple temperature ( https://github.com/rocketscream/MAX31855 )
+//   MenuBackend 1.5 (https://github.com/Orange-Cat/MenuBackend )
 //
 // Included libraries:
-//   MenuBackend 1.5 (a modified version of the original MenuBackend 1.4: http://forum.arduino.cc/index.php?topic=38053.45 )
 //   BoxFishUI (a simple menu driven interface to a 2 line LCD display that uses MenuBackend)
 //   PIDSeq (a simple PID operations sequencer that uses the Arduino PID Library)
 //
 // PID Tuning:
 //   http://www.cds.caltech.edu/~murray/books/AM08/pdf/am06-pid_16Sep06.pdf
-//   http://www.ind-pro-opt.com/Presentations/Practical_Guidelines_for_Identifying_%26_Tuning_PID_Ctl_Loops.pdf
 //
 // License:
 //   This firmware is released under the Creative Commons Attribution-ShareAlike 4.0
@@ -35,7 +34,7 @@
 #include <Wire.h>
 #include <MAX31855.h>
 #include <PID_v1.h>
-#include "MenuBackend.h"
+#include <MenuBackend.h>
 #include "PIDSeq.h"
 #include "BoxFishUI.h"
 #ifdef BOXFISH_USE_ADAFRUIT_LCD  // BOXFISH_USE_ADAFRUIT_LCD is defined (or not) in BoxFishUI.h
@@ -46,7 +45,8 @@
 
 
 // define to simulate temperature rises and falls in the oven, instead of reading the temperature sensor
-//#define BOXFISH_OVEN_SIMULATE
+#undef BOXFISH_OVEN_SIMULATE
+
 
 const char kBoxFishOvenVersion[] = "1.1";
 const char kBoxFishOvenProgramName[] =  "BoxFishOven";
@@ -403,10 +403,10 @@ void buildMenus()
   static MenuItem mi_rapid_use = MenuItem("Run Rapid Cool", kBoxFishMenuItemRapidCool);
 
   static MenuItem mi_system = MenuItem("[System]");
-  static MenuItem mi_system_reset = MenuItem("[Reset]");
-  static MenuItem mi_system_reset_use = MenuItem("Reset Controller", kBoxFishMenuItemReset);
   static MenuItem mi_system_version = MenuItem("[Version]");
   static MenuItem mi_system_version_show = MenuItem(kBoxFishOvenVersion);
+  static MenuItem mi_system_reset = MenuItem("[Reset]");
+  static MenuItem mi_system_reset_use = MenuItem("Reset Controller", kBoxFishMenuItemReset);
 
   // setup the menu hierarchy
   root.add(mi_reflow).add(mi_anneal).add(mi_rapid).add(mi_system);
@@ -437,9 +437,9 @@ void buildMenus()
       
   mi_rapid.addRight(mi_rapid_use);
 
-  mi_system.addRight(mi_system_reset).add(mi_system_version);
-  mi_system_reset.setLeft(mi_system);
+  mi_system.addRight(mi_system_version).add(mi_system_reset);
   mi_system_version.setLeft(mi_system);
+  mi_system_reset.setLeft(mi_system);
 
   mi_system_reset.addRight(mi_system_reset_use);
   mi_system_version.addRight(mi_system_version_show);
@@ -483,8 +483,7 @@ void menuItemWasSelected(int item)
       break;
 
     case kBoxFishMenuItemReset:
-      ovenSeq.abort();
-      ui.menuGotoRoot();
+      reset();
       break;
 
     default:
@@ -495,9 +494,7 @@ void menuItemWasSelected(int item)
 
 void menuDisplayThickness()
 {
-  String thickness;
-
-  thickness = String(mmThickness, 0) + "mm";
+  String thickness = String(mmThickness, 0) + "mm";
   ui.displayOverwriteMenu(thickness);
 }
 
@@ -664,6 +661,16 @@ void startRapidCool()
   
   // start the sequence
   ovenRun();
+}
+
+void reset()
+{
+  // turn off everthing then reset the contoller
+  elementsEnable(false);
+  fanEnable(false);
+  setBlowerSpeed(0);
+  
+  ui.softReset();
 }
 
 void elementsEnable(bool on)

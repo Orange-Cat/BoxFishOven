@@ -19,7 +19,7 @@
 #ifndef BOXFISH_UI_H
 #define BOXFISH_UI_H
 
-#include "MenuBackend.h"
+#include <MenuBackend.h>
 #include <String.h>
 
 // define to use the Adafruit LCD.
@@ -57,6 +57,8 @@ class BoxFishUI {
     void beep();
     BoxFishButton readButton();
     BoxFishButton lastButton();
+
+    void softReset();   // software reset of microcontroller
 
   public:
     BoxFishUI();

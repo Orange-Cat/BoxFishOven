@@ -9,15 +9,14 @@ A built-in simulator allows the program to be tested and evaluted without any sp
 **Required Libraries:**
 * Arduino PID Library ( https://github.com/br3ttb/Arduino-PID-Library )
 * MAX31855 Library for reading the thermocouple temperature ( https://github.com/rocketscream/MAX31855 )
+* MenuBackend 1.5 (https://github.com/Orange-Cat/MenuBackend )
 
 **Included libraries:**
-* MenuBackend 1.5 (a modified version of the original MenuBackend 1.4: http://forum.arduino.cc/index.php?topic=38053.45 )
 * BoxFishUI (a simple menu driven interface to a 2 line LCD display that uses MenuBackend)
 * PIDSeq (a simple PID operations sequencer that uses the Arduino PID Library)
 
 **PID Tuning:**
 * http://www.cds.caltech.edu/~murray/books/AM08/pdf/am06-pid_16Sep06.pdf
-* http://www.ind-pro-opt.com/Presentations/Practical_Guidelines_for_Identifying_%26_Tuning_PID_Ctl_Loops.pdf
 
 **License:**
 * This firmware is released under the Creative Commons Attribution-ShareAlike 4.0

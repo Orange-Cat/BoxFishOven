@@ -10,8 +10,8 @@
 //
 #include <Arduino.h>
 #include <String.h>
+#include <avr/wdt.h>
 #include "BoxFishUI.h"
-
 #ifdef BOXFISH_USE_ADAFRUIT_LCD  // BOXFISH_USE_ADAFRUIT_LCD is defined (or not) in BoxFishUI.h
   #include <Adafruit_RGBLCDShield.h>
 #else
@@ -31,7 +31,7 @@ static const int buzzerPin = 6;
 #ifdef BOXFISH_USE_ADAFRUIT_LCD
 static Adafruit_RGBLCDShield lcd = Adafruit_RGBLCDShield();
 #else
-static LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
+static LiquidCrystal lcd(8, 9, 4, 5, 6, 7);   // Freetronics 16x2 LCD sheild v2.0
 #endif
 
 static BoxFishMenuCallback callback_func = NULL;
@@ -336,5 +336,16 @@ BoxFishButton BoxFishUI::lastButton()
 {
   // returns the last button state.
   return button_state_;
+}
+
+void BoxFishUI::softReset()
+{
+  // enable watchdog timer
+  wdt_enable(WDTO_15MS);
+
+  // loop forever until watchdog timer resets the microcontroller
+  for (;;) {
+    continue;
+  }
 }
 
