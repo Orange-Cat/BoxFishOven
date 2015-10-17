@@ -506,6 +506,13 @@ void menuSetThickness()
   BoxFishButton button;
   bool selectingThickness = true;
 
+  // just beep if the oven is in operation. we can't set thickness during operation because it's blocking
+  // and because it has no effect after the sequence is setup.
+  if (isRunning) {
+    ui.beep();
+    return;
+  }
+
   menuDisplayThickness();
   while (selectingThickness) {
     button = ui.readButton();
