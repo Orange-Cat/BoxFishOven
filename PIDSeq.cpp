@@ -194,7 +194,7 @@ void PIDSeq::configPIDForCurrentOp()
   }
 }
 
-bool PIDSeq::isSetpointReached()
+bool PIDSeq::isSetpointReached() const
 {
   // returns true if ramp is complete and we are within epsilon of our target (i.e. final) setpoint
 

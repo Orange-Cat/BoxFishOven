@@ -37,7 +37,7 @@ typedef enum {
 
 typedef void (*BoxFishMenuCallback)(int);
 
-static const char kBoxFishDegreeChar = '\1';   // character which prints a degree symbol on the LCD display
+static const char kBoxFishDegreeChar = '\1';     // character which prints a degree symbol on the LCD display
 static const unsigned long kDebouceDelay = 20;   // key debouce delay in milliseconds
   
 class BoxFishUI {
@@ -49,10 +49,11 @@ class BoxFishUI {
     void menuNavigate();        // call each time through loop()
     void menuGotoRoot();
 
-    void displayStatus(String stat);
-    void displayInfo(String info);
-    void displayOverwriteMenu(String menu);
+    void displayStatus(const String& stat);
+    void displayInfo(const String& info);
+    void displayOverwriteMenu(const String& menu);
     void redisplayCurrentMenu();
+    void writeExactlyAt(unsigned int x, unsigned int y, const String& str, unsigned int width);
     
     void beep();
     BoxFishButton readButton();

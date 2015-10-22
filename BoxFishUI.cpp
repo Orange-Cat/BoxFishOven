@@ -95,46 +95,37 @@ void BoxFishUI::displaySplash()
   lcd.clear();
 }
 
-void BoxFishUI::displayStatus(String stat)
+void BoxFishUI::writeExactlyAt(unsigned int x, unsigned int y, const String& str, unsigned int width)
 {
-  // lower line, last 5 chars
-  lcd.setCursor(11, 1);
+  // writes exactly width chars, truncating the string to width and padding on the right if necessary to fill width
+  lcd.setCursor(x, y);
   
-  int i;
-  for (i=0; i < 5 && stat[i] != '\0'; i++) {
-    lcd.write(stat[i]);
+  unsigned int i;
+  for (i=0; i < str.length() && i < width; i++) {
+    lcd.write(str[i]);
   }
-  while (i++ < 5) {
+  while (i < width) {
     lcd.write(' ');
+    i++;
   }
 }
 
-void BoxFishUI::displayInfo(String info)
+void BoxFishUI::displayStatus(const String& stat)
+{
+  // lower line, last 5 chars 
+  writeExactlyAt(11, 1, stat, 5);
+}
+
+void BoxFishUI::displayInfo(const String& info)
 {
   // lower line, first 10 chars
-  lcd.setCursor(0, 1);
-
-  int i;
-  for (i=0; i < 10 && info[i] != '\0'; i++) {
-    lcd.write(info[i]);
-  }
-  while (i++ < 10) {
-    lcd.write(' ');
-  }
+  writeExactlyAt(0, 1, info, 10);
 }
 
-void BoxFishUI::displayOverwriteMenu(String menu)
+void BoxFishUI::displayOverwriteMenu(const String& menu)
 {
-  // upper line, first 16 chars
-  lcd.setCursor(0, 0);
-
-  int i;
-  for (i=0; i < 16 && menu[i] != '\0'; i++) {
-    lcd.write(menu[i]);
-  }
-  while (i++ < 16) {
-    lcd.write(' ');
-  }
+  // upper line, all 16 chars
+  writeExactlyAt(0, 0, menu, 16);
 }
 
 void BoxFishUI::beep()

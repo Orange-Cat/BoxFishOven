@@ -90,7 +90,7 @@ class PIDSeq
 
   private:
     void configPIDForCurrentOp();
-    bool isSetpointReached();
+    bool isSetpointReached() const;
 
   private:
     PID pid_;

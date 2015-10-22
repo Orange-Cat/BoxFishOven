@@ -84,8 +84,8 @@ const int thermocoupleCSPin = 11;
 const int thermocoupleCLKPin = 12;
 
 // Constants
-const int kMaxErrors = 10;               // after this many errors we quit
-const double kTemperatureFanMin = 40.0;  // keep internal fan on until it cools to this temperture after cycle is complete
+const int kMaxErrors = 10;               // after this many consecutive errors we quit
+const double kTemperatureFanMin = 40.0;  // keep internal fan on until oven cools to this temperture after cycle is complete
 const double kTemperatureMax = 280.0;    // abort if temp rises above this
 const int kBlowerPWMMax = 127;           // maximum blower PWM (out of 0-255)
 const double kBoxFishTemperatureError = -300.0;    // we use this temperature to indicate a temperature read error
@@ -328,7 +328,9 @@ void simulateOven()
   
   double average_heating_control = sum / kNumAverage;
 
-  // we determine the heat transfer from the elements assuming the surface temp is 1000C
+  // we determine the heat transfer from the elements assuming the surface temp is 1000C.
+  // this compensates both for the increase in resistance that occurs as temperature rises
+  // and for the loss of efficiency as the air temp gets closer to the element temp.
   double element_heat_transfer = 1.0 - (temperature / 1000.0);
 
   // we estimate the heating from the elements (note that when we start cooling the elements will still be hot even though off)
@@ -412,26 +414,12 @@ void buildMenus()
   // setup the menu hierarchy
   root.add(mi_reflow).add(mi_anneal).add(mi_rapid).add(mi_system);
 
-  // we configure the left button to allow the user to go back one level
-  mi_reflow.setLeft(root);
-  mi_anneal.setLeft(root);
-  mi_rapid.setLeft(root);
-  mi_system.setLeft(root);
-
   // configure the remaining menus
   mi_reflow.addRight(mi_reflow_lead).add(mi_reflow_lead_free);
-  mi_reflow_lead.setLeft(mi_reflow);
-  mi_reflow_lead_free.setLeft(mi_reflow);
-
   mi_reflow_lead.addRight(mi_reflow_lead_use);
   mi_reflow_lead_free.addRight(mi_reflow_lead_free_use);
 
   mi_anneal.addRight(mi_anneal_thickness).add(mi_anneal_acrylic).add(mi_anneal_polycarbonate).add(mi_anneal_acetal);
-  mi_anneal_thickness.setLeft(mi_anneal);
-  mi_anneal_acrylic.setLeft(mi_anneal);
-  mi_anneal_polycarbonate.setLeft(mi_anneal);
-  mi_anneal_acetal.setLeft(mi_anneal);
-      
   mi_anneal_acrylic.addRight(mi_anneal_acrylic_use);
   mi_anneal_polycarbonate.addRight(mi_anneal_polycarbonate_use);
   mi_anneal_acetal.addRight(mi_anneal_acetal_use);
@@ -439,9 +427,6 @@ void buildMenus()
   mi_rapid.addRight(mi_rapid_use);
 
   mi_system.addRight(mi_system_version).add(mi_system_reset);
-  mi_system_version.setLeft(mi_system);
-  mi_system_reset.setLeft(mi_system);
-
   mi_system_reset.addRight(mi_system_reset_use);
   mi_system_version.addRight(mi_system_version_show);
 }
