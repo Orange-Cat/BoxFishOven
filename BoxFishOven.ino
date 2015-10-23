@@ -220,11 +220,11 @@ void pidControl()
 void displayTemperature(double temp)
 {
   if (temp <= kBoxFishTemperatureError) {
-    ui.displayStatus(F("ERROR"));
+    ui.writeStatus(F("ERROR"));
   }
   else {
     String tempString = String(temp, 0) + kBoxFishDegreeChar + F("C");
-    ui.displayStatus(tempString);
+    ui.writeStatus(tempString);
   }
 }
 
@@ -247,7 +247,7 @@ void updateStatus()
       status_line = F("Complete");
     }
   }
-  ui.displayInfo(status_line);
+  ui.writeInfo(status_line);
   
   // if oven is in use
   if (isRunning) {
@@ -376,7 +376,7 @@ void readThermocouple()
 void menuDisplayThickness()
 {
   String thickness = String(mmThickness, 0) + F("mm");
-  ui.displayOverwriteMenu(thickness);
+  ui.overwriteMenu(thickness);
 }
 
 void menuSetThickness()
@@ -428,7 +428,7 @@ void menuSetThickness()
 void ovenBegin()
 {
   // display a message and reset the job timer
-  ui.displayInfo(F("Start"));
+  ui.writeInfo(F("Start"));
   delay(1000);
   jobSeconds  = 0;
 

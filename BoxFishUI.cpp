@@ -12,11 +12,6 @@
 #include <String.h>
 #include <avr/wdt.h>
 #include "BoxFishUI.h"
-#ifdef BOXFISH_USE_ADAFRUIT_LCD  // BOXFISH_USE_ADAFRUIT_LCD is defined (or not) in BoxFishUI.h
-  #include <Adafruit_RGBLCDShield.h>
-#else
-  #include <LiquidCrystal.h>
-#endif
 
 // LCD display PIN assignments
 #ifndef BOXFISH_USE_ADAFRUIT_LCD
@@ -27,24 +22,24 @@ static const int buzzerPin = -1;      // set buzzerPin to -1 where there is no b
 static const int buzzerPin = 6;
 #endif
 
-// Specify LCD interface
-#ifdef BOXFISH_USE_ADAFRUIT_LCD
-static Adafruit_RGBLCDShield lcd = Adafruit_RGBLCDShield();
-#else
-static LiquidCrystal lcd(8, 9, 4, 5, 6, 7);   // Freetronics 16x2 LCD sheild v2.0
-#endif
 
-static BoxFishMenuCallback callback_func = NULL;
-static const char* prog_name = "";
-static const char* prog_version = "";
+static BoxFishUI* lcd;
 
 
 BoxFishUI::BoxFishUI()
-  :menu_(menuUseEventCallback, menuChangeEventCallback),
+#ifdef BOXFISH_USE_ADAFRUIT_LCD
+  :Adafruit_RGBLCDShield(),
+#else
+  :LiquidCrystal(8, 9, 4, 5, 6, 7),   // Freetronics 16x2 LCD sheild v2.0
+#endif
+  menu_(menuUseEventCallback, menuChangeEventCallback),
   button_state_(kBoxFishButtonNone),
   last_button_reading_(kBoxFishButtonNone),
   debounced_button_(kBoxFishButtonNone),
-  debounce_time_(0)
+  debounce_time_(0),
+  callback_func_(NULL),
+  prog_name_(""),
+  prog_version_("")
 {
   return;
 }
@@ -74,55 +69,55 @@ void BoxFishUI::menuUseEventCallback(MenuUseEvent used)
   // callled when a menu item is selected
 
   int selection = (int) used.item.getShortkey();
-  if (selection != '\0' && callback_func != NULL) {
-    callback_func(selection);
+  if (selection != '\0' && lcd->callback_func_ != NULL) {
+    lcd->callback_func_(selection);
   }
 }
 
 void BoxFishUI::displaySplash()
 {
   // display splash screen
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print(prog_name);
-  lcd.setCursor(0, 1);
-  lcd.print("v");
-  lcd.print(prog_version);
+  clear();
+  setCursor(0, 0);
+  print(prog_name_);
+  setCursor(0, 1);
+  print("v");
+  print(prog_version_);
 
   beep();
   delay(2000);
 
-  lcd.clear();
+  clear();
 }
 
 void BoxFishUI::writeExactlyAt(unsigned int x, unsigned int y, const String& str, unsigned int width)
 {
   // writes exactly width chars, truncating the string to width and padding on the right if necessary to fill width
-  lcd.setCursor(x, y);
+  setCursor(x, y);
   
   unsigned int i;
   for (i=0; i < str.length() && i < width; i++) {
-    lcd.write(str[i]);
+    write(str[i]);
   }
   while (i < width) {
-    lcd.write(' ');
+    write(' ');
     i++;
   }
 }
 
-void BoxFishUI::displayStatus(const String& stat)
+void BoxFishUI::writeStatus(const String& stat)
 {
   // lower line, last 5 chars 
   writeExactlyAt(11, 1, stat, 5);
 }
 
-void BoxFishUI::displayInfo(const String& info)
+void BoxFishUI::writeInfo(const String& info)
 {
   // lower line, first 10 chars
   writeExactlyAt(0, 1, info, 10);
 }
 
-void BoxFishUI::displayOverwriteMenu(const String& menu)
+void BoxFishUI::overwriteMenu(const String& menu)
 {
   // upper line, all 16 chars
   writeExactlyAt(0, 0, menu, 16);
@@ -137,8 +132,6 @@ void BoxFishUI::beep()
 
 void BoxFishUI::lcdSetup()
 {
-  lcd.begin(16, 2);
-
 #ifndef BOXFISH_USE_ADAFRUIT_LCD
   // all buttons connected to one analog input:
   pinMode(buttonPin, INPUT);
@@ -153,14 +146,17 @@ void BoxFishUI::lcdSetup()
   static uint8_t degree[8]  = {
     140, 146, 146, 140, 128, 128, 128, 128
   };
-  lcd.createChar(kBoxFishDegreeChar, degree);
+  createChar(kBoxFishDegreeChar, degree);
 }
 
 void BoxFishUI::begin(const char program_name[], const char program_version[], BoxFishMenuCallback callback)
 {
-  prog_name = program_name;
-  prog_version = program_version;
-  callback_func = callback;
+  lcd = this;
+  LCD_CLASS::begin(16, 2);
+  
+  prog_name_ = program_name;
+  prog_version_ = program_version;
+  callback_func_ = callback;
   
   button_state_ = kBoxFishButtonNone;
 
@@ -215,9 +211,9 @@ void BoxFishUI::menuNavigate()
 void BoxFishUI::menuDisplayMenu(const MenuItem& menu)
 {
   // clear line and reset cursor
-  lcd.setCursor(0, 0);
-  lcd.print("                ");
-  lcd.setCursor(0, 0);
+  lcd->setCursor(0, 0);
+  lcd->print("                ");
+  lcd->setCursor(0, 0);
 
   String name;
   if (menu.getName() != NULL) {
@@ -227,12 +223,12 @@ void BoxFishUI::menuDisplayMenu(const MenuItem& menu)
     name = menu.getFlashName();
   }
   if (name == "MenuRoot") {
-    lcd.print("[");
-    lcd.print(prog_name);
-    lcd.print("]");
+    lcd->print("[");
+    lcd->print(lcd->prog_name_);
+    lcd->print("]");
   }
   else {
-    lcd.print(name);
+    lcd->print(name);
   }
 }
 
@@ -270,7 +266,7 @@ BoxFishButton BoxFishUI::readButton()
   BoxFishButton button_reading;
   
 #ifdef BOXFISH_USE_ADAFRUIT_LCD
-  uint8_t buttons = lcd.readButtons();
+  uint8_t buttons = readButtons();
 
   if (buttons & BUTTON_SELECT) {
     button_reading = kBoxFishButtonSelect;
@@ -327,7 +323,6 @@ BoxFishButton BoxFishUI::readButton()
   button_state_ = debounce(button_reading);  
   return button_state_;
 }
-
 
 BoxFishButton BoxFishUI::lastButton()
 {
