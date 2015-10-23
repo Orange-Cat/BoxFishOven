@@ -142,11 +142,18 @@ void BoxFishUI::lcdSetup()
   pinMode(backlightPin, OUTPUT);
 #endif
 
-  // create degree character for LCD as char kBoxFishDegreeChar
-  static uint8_t degree[8]  = {
-    140, 146, 146, 140, 128, 128, 128, 128
+  // create degree character for the LCD as char kBoxFishDegreeChar
+  static uint8_t degree_symbol[]  = {
+    0b01100,
+    0b10010,
+    0b10010,
+    0b01100,
+    0b00000,
+    0b00000,
+    0b00000,
+    0
   };
-  createChar(kBoxFishDegreeChar, degree);
+  createChar(kBoxFishDegreeChar, degree_symbol);
 }
 
 void BoxFishUI::begin(const char program_name[], const char program_version[], BoxFishMenuCallback callback)
