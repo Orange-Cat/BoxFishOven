@@ -10,7 +10,7 @@ A built-in simulator allows the program to be tested and evaluted without any sp
 * Adafruit RGB LCD Shield Library ( https://github.com/adafruit/Adafruit-RGB-LCD-Shield-Library )
 * Arduino PID Library ( https://github.com/br3ttb/Arduino-PID-Library )
 * MAX31855 Library for reading the thermocouple temperature ( https://github.com/rocketscream/MAX31855 )
-* MenuBackend 1.5 ( https://github.com/Orange-Cat/MenuBackend )
+* MenuBackend 1.6 ( https://github.com/Orange-Cat/MenuBackend )
 
 **Included libraries:**
 * BoxFishUI (a simple menu driven interface to a 2 line LCD display that uses MenuBackend)
