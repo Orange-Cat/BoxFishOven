@@ -1,4 +1,4 @@
-The BoxFishOven controller supports multiple reflow and annealing profiles selectable from the LCD display and a design that makes it easy to add new profiles.
+The BoxFishOven controller v1.2 supports multiple reflow and annealing profiles selectable from the LCD display and a design that makes it easy to add new profiles.
 
 The target oven has two SSRs controlling the top and bottom elements (although we only turn them on/off together), a relay to control the oven's convection fan, and a PWM controlled blower that forces room air into the oven to cool it down rapidly.
 

@@ -37,10 +37,10 @@ class PIDOp {
     void setEpsilon(double epsilon) { epsilon_ = epsilon; }                   // allowed error, default is kPIDOpDefaultPercentEpsilon * setpoint
 
     // just for associating a name with the op (great for displaying a status)
-    void setName(const char* name) { name_ = name; flash_name_ = NULL; }      // default is ""
-    void setName(const __FlashStringHelper* name) { flash_name_ = name; name_ = NULL; }    // default is NULL
-    const char* name() const { return name_; }
-    const __FlashStringHelper* flashName() const { return flash_name_; }
+    void setName(const char* name) { name_ = name; flash_name_ = NULL; }  
+    void setName(const __FlashStringHelper* name) { flash_name_ = name; name_ = NULL; }
+    const char* name() const { return name_; }                                // default is ""
+    const __FlashStringHelper* flashName() const { return flash_name_; }      // default is NULL
     
   public:
     PIDOp();
