@@ -219,7 +219,13 @@ void BoxFishUI::menuDisplayMenu(const MenuItem& menu)
   lcd.print("                ");
   lcd.setCursor(0, 0);
 
-  String name = String(menu.getName());
+  String name;
+  if (menu.getName() != NULL) {
+    name = menu.getName();
+  }
+  else {
+    name = menu.getFlashName();
+  }
   if (name == "MenuRoot") {
     lcd.print("[");
     lcd.print(prog_name);

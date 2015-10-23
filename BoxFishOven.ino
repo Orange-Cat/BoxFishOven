@@ -44,7 +44,7 @@
   #include <LiquidCrystal.h>
 #endif
 
-
+       
 // define to simulate temperature rises and falls in the oven, instead of reading the temperature sensor
 #undef BOXFISH_OVEN_SIMULATE
 
@@ -52,7 +52,7 @@
 const char kBoxFishOvenVersion[] = "1.1";
 const char kBoxFishOvenProgramName[] =  "BoxFishOven";
 
-typedef enum {
+enum BoxFishMenuItem {
   // start numbering at 1, because 0 indicates no menu item
   kBoxFishMenuItemLeaded = 1,
   kBoxFishMenuItemLeadFree,
@@ -65,7 +65,7 @@ typedef enum {
   
   kBoxFishMenuItemRapidCool,
   kBoxFishMenuItemReset
-} BoxFishMenuItem;
+};
 
 // Pin assignments
 #ifdef BOXFISH_USE_ADAFRUIT_LCD
@@ -237,7 +237,7 @@ void displayTemperature(double temp)
     ui.displayStatus("ERROR");
   }
   else {
-    String tempString = String(temp, 0) + kBoxFishDegreeChar + "C";
+    String tempString = String(temp, 0) + kBoxFishDegreeChar + F("C");
     ui.displayStatus(tempString);
   }
 }
@@ -253,7 +253,7 @@ void updateStatus()
   }
   else {
     if (ovenSeq.isComplete() && ovenSeq.wasStarted()) {
-      status_line = "Complete";
+      status_line = F("Complete");
     }
   }
   ui.displayInfo(status_line);
@@ -387,29 +387,29 @@ void buildMenus()
   MenuItemRef root = ui.getRootMenu();
 
   // create our menu system
-  static MenuItem mi_reflow = MenuItem("[Reflow]");
-  static MenuItem mi_reflow_lead = MenuItem("[Leaded]");
-  static MenuItem mi_reflow_lead_use = MenuItem("Run Leaded", kBoxFishMenuItemLeaded);
-  static MenuItem mi_reflow_lead_free = MenuItem("[Lead Free]");
-  static MenuItem mi_reflow_lead_free_use = MenuItem("Run Lead Free", kBoxFishMenuItemLeadFree);
+  static MenuItem mi_reflow = MenuItem(F("[Reflow]"));
+  static MenuItem mi_reflow_lead = MenuItem(F("[Leaded]"));
+  static MenuItem mi_reflow_lead_use = MenuItem(F("Run Leaded"), kBoxFishMenuItemLeaded);
+  static MenuItem mi_reflow_lead_free = MenuItem(F("[Lead Free]"));
+  static MenuItem mi_reflow_lead_free_use = MenuItem(F("Run Lead Free"), kBoxFishMenuItemLeadFree);
 
-  static MenuItem mi_anneal = MenuItem("[Anneal]");
-  static MenuItem mi_anneal_thickness = MenuItem("[Set Thickness]", kBoxFishMenuItemSetThickness);
-  static MenuItem mi_anneal_acrylic = MenuItem("[Acrylic]");
-  static MenuItem mi_anneal_acrylic_use = MenuItem("Run Acrylic", kBoxFishMenuItemAcrylic);
-  static MenuItem mi_anneal_polycarbonate = MenuItem("[Polycarbonate]");
-  static MenuItem mi_anneal_polycarbonate_use = MenuItem("Run Polycarbonate", kBoxFishMenuItemPolycarbonate);
-  static MenuItem mi_anneal_acetal = MenuItem("[Acetal]");
-  static MenuItem mi_anneal_acetal_use = MenuItem("Run Acetal", kBoxFishMenuItemAcetal);
+  static MenuItem mi_anneal = MenuItem(F("[Anneal]"));
+  static MenuItem mi_anneal_thickness = MenuItem(F("[Set Thickness]"), kBoxFishMenuItemSetThickness);
+  static MenuItem mi_anneal_acrylic = MenuItem(F("[Acrylic]"));
+  static MenuItem mi_anneal_acrylic_use = MenuItem(F("Run Acrylic"), kBoxFishMenuItemAcrylic);
+  static MenuItem mi_anneal_polycarbonate = MenuItem(F("[Polycarbonate]"));
+  static MenuItem mi_anneal_polycarbonate_use = MenuItem(F("Run Polycarbonate"), kBoxFishMenuItemPolycarbonate);
+  static MenuItem mi_anneal_acetal = MenuItem(F("[Acetal]"));
+  static MenuItem mi_anneal_acetal_use = MenuItem(F("Run Acetal"), kBoxFishMenuItemAcetal);
 
-  static MenuItem mi_rapid = MenuItem("[Rapid Cool]");
-  static MenuItem mi_rapid_use = MenuItem("Run Rapid Cool", kBoxFishMenuItemRapidCool);
+  static MenuItem mi_rapid = MenuItem(F("[Rapid Cool]"));
+  static MenuItem mi_rapid_use = MenuItem(F("Run Rapid Cool"), kBoxFishMenuItemRapidCool);
 
-  static MenuItem mi_system = MenuItem("[System]");
-  static MenuItem mi_system_version = MenuItem("[Version]");
+  static MenuItem mi_system = MenuItem(F("[System]"));
+  static MenuItem mi_system_version = MenuItem(F("[Version]"));
   static MenuItem mi_system_version_show = MenuItem(kBoxFishOvenVersion);
-  static MenuItem mi_system_reset = MenuItem("[Reset]");
-  static MenuItem mi_system_reset_use = MenuItem("Reset Controller", kBoxFishMenuItemReset);
+  static MenuItem mi_system_reset = MenuItem(F("[Reset]"));
+  static MenuItem mi_system_reset_use = MenuItem(F("Reset Controller"), kBoxFishMenuItemReset);
 
   // setup the menu hierarchy
   root.add(mi_reflow).add(mi_anneal).add(mi_rapid).add(mi_system);
@@ -480,7 +480,7 @@ void menuItemWasSelected(int item)
 
 void menuDisplayThickness()
 {
-  String thickness = String(mmThickness, 0) + "mm";
+  String thickness = String(mmThickness, 0) + F("mm");
   ui.displayOverwriteMenu(thickness);
 }
 

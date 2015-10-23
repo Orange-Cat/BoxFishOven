@@ -26,14 +26,14 @@
 #define BOXFISH_USE_ADAFRUIT_LCD
 
 
-typedef enum {
+enum BoxFishButton {
   kBoxFishButtonNone,
   kBoxFishButtonUp = 0x01,
   kBoxFishButtonDown = 0x02,
   kBoxFishButtonLeft = 0x04,
   kBoxFishButtonRight = 0x08,
   kBoxFishButtonSelect = 0x10
-} BoxFishButton;
+};
 
 typedef void (*BoxFishMenuCallback)(int);
 
