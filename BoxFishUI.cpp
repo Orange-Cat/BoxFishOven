@@ -176,6 +176,7 @@ void BoxFishUI::menuChangeEventCallback(MenuChangeEvent changed)
 void BoxFishUI::menuNavigate()
 {
   // should be called everytime through loop(), handles button pressing and menu displaying
+  lcd = this;
   
   BoxFishButton button_state = readButton();
   MenuItem cur_menu = menu_.getCurrent();

@@ -61,7 +61,6 @@ class BoxFishUI : public LCD_CLASS {
     void menuNavigate();        // call each time through loop()
     void menuGotoRoot();
 
-    void writeExactlyAt(unsigned int x, unsigned int y, const String& str, unsigned int width);
     void writeStatus(const String& stat);
     void writeInfo(const String& info);
     void overwriteMenu(const String& menu);
@@ -72,13 +71,16 @@ class BoxFishUI : public LCD_CLASS {
     BoxFishButton lastButton();
 
     void softReset();   // software reset of microcontroller
+
+  protected:
+    void writeExactlyAt(unsigned int x, unsigned int y, const String& str, unsigned int width);
+    void lcdSetup();
+    void displaySplash();
     
   private:
     static void menuChangeEventCallback(MenuChangeEvent changed);
     static void menuUseEventCallback(MenuUseEvent used);
     void menuDisplayMenu(const MenuItem& menu);
-    void lcdSetup();
-    void displaySplash();
     BoxFishButton debounce(BoxFishButton button);
     
   private:
