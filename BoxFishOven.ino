@@ -1,7 +1,7 @@
 //
 // Title: BoxFishOven Controller
 // Author: Orange Cat
-// Date: 15-10-2015
+// Date: 23-10-2015
 // 
 // The BoxFishOven controller supports multiple reflow and annealing profiles
 // selectable from the LCD display and a design that makes it easy to add new profiles.
@@ -49,7 +49,7 @@
 #undef BOXFISH_OVEN_SIMULATE
 
 
-const char kBoxFishOvenVersion[] = "1.1";
+const char kBoxFishOvenVersion[] = "1.2";
 const char kBoxFishOvenProgramName[] =  "BoxFishOven";
 
 enum BoxFishMenuItem {
@@ -234,7 +234,7 @@ void pidControl()
 void displayTemperature(double temp)
 {
   if (temp <= kBoxFishTemperatureError) {
-    ui.displayStatus("ERROR");
+    ui.displayStatus(F("ERROR"));
   }
   else {
     String tempString = String(temp, 0) + kBoxFishDegreeChar + F("C");
@@ -249,7 +249,12 @@ void updateStatus()
   // display the control system status
   String status_line = "";
   if (isRunning) {
-   status_line = ovenSeq.curOpName();
+    if (ovenSeq.curOpName() != NULL) {
+      status_line = ovenSeq.curOpName();
+    }
+    else {
+      status_line = ovenSeq.curOpFlashName();
+    }
   }
   else {
     if (ovenSeq.isComplete() && ovenSeq.wasStarted()) {
@@ -539,7 +544,7 @@ PIDOp cool;
 void ovenBegin()
 {
   // display a message and reset the job timer
-  ui.displayInfo("Start");
+  ui.displayInfo(F("Start"));
   delay(1000);
   jobSeconds  = 0;
 
@@ -569,7 +574,7 @@ void startReflow(double reflow_temperature)
   preheat.begin(150.0, 112.0, 0.02, 252.0);
   preheat.setEpsilon(4.0);
   preheat.setControlLimits(0.0, kWindowSize);
-  preheat.setName("Preheat");
+  preheat.setName(F("Preheat"));
   ovenSeq.addOp(preheat);
   
   // soak: now raise temperature to 200C over 100 seconds
@@ -577,7 +582,7 @@ void startReflow(double reflow_temperature)
   soak.setRampTime(100);
   soak.setEpsilon(4.0);
   soak.setControlLimits(0.0, kWindowSize);
-  soak.setName("Soak");
+  soak.setName(F("Soak"));
   ovenSeq.addOp(soak);
   
   // reflow: raise temperature quickly to the reflow_temperature
@@ -585,7 +590,7 @@ void startReflow(double reflow_temperature)
   reflow.setHoldTime(10); // hold for 10 seconds to allow pins on metal connectors to reflow
   reflow.setEpsilon(5.0);
   reflow.setControlLimits(0.0, kWindowSize);
-  reflow.setName("Reflow");
+  reflow.setName(F("Reflow"));
   ovenSeq.addOp(reflow);
   
   // cool: cool quickly using the blower
@@ -593,7 +598,7 @@ void startReflow(double reflow_temperature)
   cool.setReverse(true);
   cool.setEpsilon(3.0);
   cool.setControlLimits(0.0, kBlowerPWMMax);
-  cool.setName("Cool");
+  cool.setName(F("Cool"));
   ovenSeq.addOp(cool);
 
   // start the sequence
@@ -615,7 +620,7 @@ void startAnneal(double hold_temp, unsigned long ramp_up_minutes, unsigned long 
   preheat.setRampTime(ramp_up_minutes * 60uL);
   preheat.setEpsilon(epsilon);
   preheat.setControlLimits(0.0, kWindowSize);
-  preheat.setName("Slow Heat");
+  preheat.setName(F("Slow Heat"));
   ovenSeq.addOp(preheat);
 
   // hold at hold_temp for hold_minutes minutes
@@ -623,7 +628,7 @@ void startAnneal(double hold_temp, unsigned long ramp_up_minutes, unsigned long 
   soak.setHoldTime(hold_minutes * 60uL);
   soak.setEpsilon(epsilon);
   soak.setControlLimits(0.0, kWindowSize);
-  soak.setName("Hold");
+  soak.setName(F("Hold"));
   ovenSeq.addOp(soak);
   
   // cool to 30C at ramp_down_deg_hour degrees C/hr (note this is actually a heating cycle with decreasing setpoint)
@@ -632,7 +637,7 @@ void startAnneal(double hold_temp, unsigned long ramp_up_minutes, unsigned long 
   cool.setRampTime(ramp_down_minutes * 60uL);
   cool.setEpsilon(epsilon);
   cool.setControlLimits(0.0, kWindowSize);
-  cool.setName("Slow Cool");
+  cool.setName(F("Slow Cool"));
   ovenSeq.addOp(cool);
 
   // start the sequence
@@ -649,7 +654,7 @@ void startRapidCool()
   cool.setEpsilon(5.0);
   cool.setReverse(true);
   cool.setControlLimits(0.0, kBlowerPWMMax);
-  cool.setName("Rapid Cool");
+  cool.setName(F("Rapid Cool"));
   ovenSeq.addOp(cool);
   
   // start the sequence

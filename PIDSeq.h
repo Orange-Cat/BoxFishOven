@@ -1,7 +1,7 @@
 //
 // Title: Arduino PID Sequencer
 // Author: Orange Cat
-// Date: 15-10-2015
+// Date: 23-10-2015
 //
 // Allows setting up a sequence of PID operations (i.e. PID paramaters (setpoint, Kp, Ki, Kd) plus ramp times and hold times).
 // When the setpoint and hold time is reached (within epsilon of being reached) it will move onto the next operation in the sequence.
@@ -37,9 +37,11 @@ class PIDOp {
     void setEpsilon(double epsilon) { epsilon_ = epsilon; }                   // allowed error, default is kPIDOpDefaultPercentEpsilon * setpoint
 
     // just for associating a name with the op (great for displaying a status)
-    void setName(const char* name) { name_ = name; }                          // default is ""
+    void setName(const char* name) { name_ = name; flash_name_ = NULL; }      // default is ""
+    void setName(const __FlashStringHelper* name) { flash_name_ = name; name_ = NULL; }    // default is NULL
     const char* name() const { return name_; }
-
+    const __FlashStringHelper* flashName() const { return flash_name_; }
+    
   public:
     PIDOp();
 
@@ -56,7 +58,8 @@ class PIDOp {
     double min_;
     double max_;
     const char* name_;
-
+    const __FlashStringHelper* flash_name_;
+    
     PIDOp* next_;
 };
 
@@ -79,6 +82,7 @@ class PIDSeq
 
     // return the current sequences operation name and whether the operation is set to reverse respectively:
     String curOpName() const { if (cur_op_ != NULL) return cur_op_->name(); else return ""; }
+    const __FlashStringHelper* curOpFlashName() const { if (cur_op_ != NULL) return cur_op_->flashName(); else return NULL; }
     bool curOpIsReverse() const { if (cur_op_ != NULL) return cur_op_->isReverse(); else return false; }
   
   public:

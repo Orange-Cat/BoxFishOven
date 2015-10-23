@@ -1,7 +1,7 @@
 //
 // Title: Arduino PID Sequencer
 // Author: Orange Cat
-// Date: 15-10-2015
+// Date: 23-10-2015
 //
 // License:
 //   This firmware is released under the Creative Commons Attribution-ShareAlike 4.0
@@ -23,7 +23,8 @@ PIDOp::PIDOp()
   hold_sec_(0),
   min_(0),
   max_(0),
-  name_("")
+  name_(""),
+  flash_name_(NULL)
 {
   return;
 }
@@ -42,6 +43,7 @@ void PIDOp::begin(double setpoint, double Kp, double Ki, double Kd)
   min_ = 0;
   max_ = 255;
   name_ = "";
+  flash_name_ = NULL;
 }
 
 PIDSeq::PIDSeq()
@@ -81,6 +83,7 @@ void PIDSeq::begin()
   control_ = 0.0;
   is_complete_ = true;
   was_started_ = false;
+  pid_ = PID(&process_, &control_, &cur_setpoint_, 1.0, 0.0, 0.0, DIRECT);
 }
 
 void PIDSeq::addOp(PIDOp& op)
