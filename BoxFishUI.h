@@ -23,7 +23,7 @@
 #include <String.h>
 
 // define to use the Adafruit LCD.
-#undef BOXFISH_USE_ADAFRUIT_LCD
+#define BOXFISH_USE_ADAFRUIT_LCD
 
 
 #ifdef BOXFISH_USE_ADAFRUIT_LCD  // BOXFISH_USE_ADAFRUIT_LCD is defined (or not) in BoxFishUI.h

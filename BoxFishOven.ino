@@ -47,7 +47,7 @@
 
        
 // define to simulate temperature rises and falls in the oven, instead of reading the temperature sensor
-#define BOXFISH_OVEN_SIMULATE
+#undef BOXFISH_OVEN_SIMULATE
 
 
 const char kBoxFishOvenVersion[] = "1.5";
