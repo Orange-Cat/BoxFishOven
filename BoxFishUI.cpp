@@ -170,7 +170,7 @@ void BoxFishUI::begin(const char program_name[], const char program_version[], B
 void BoxFishUI::menuChangeEventCallback(MenuChangeEvent changed)
 {
   // called when the menu system is traversed
-  menuDisplayMenu(changed.to);
+  lcd->menuDisplayMenu(changed.to);
 }
 
 void BoxFishUI::menuNavigate()
@@ -211,9 +211,9 @@ void BoxFishUI::menuNavigate()
 void BoxFishUI::menuDisplayMenu(const MenuItem& menu)
 {
   // clear line and reset cursor
-  lcd->setCursor(0, 0);
-  lcd->print("                ");
-  lcd->setCursor(0, 0);
+  setCursor(0, 0);
+  print("                ");
+  setCursor(0, 0);
 
   String name;
   if (menu.getName() != NULL) {
@@ -223,12 +223,12 @@ void BoxFishUI::menuDisplayMenu(const MenuItem& menu)
     name = menu.getFlashName();
   }
   if (name == "MenuRoot") {
-    lcd->print("[");
-    lcd->print(lcd->prog_name_);
-    lcd->print("]");
+    print("[");
+    print(lcd->prog_name_);
+    print("]");
   }
   else {
-    lcd->print(name);
+    print(name);
   }
 }
 

@@ -24,6 +24,9 @@ class PIDSeq;
 
 class PIDOp {
   friend class PIDSeq;
+    
+  public:
+    PIDOp();
 
   public:
     void begin(double setpoint, double Kp, double Ki, double Kd);
@@ -41,9 +44,6 @@ class PIDOp {
     void setName(const __FlashStringHelper* name) { flash_name_ = name; name_ = NULL; }
     const char* name() const { return name_; }                                // default is ""
     const __FlashStringHelper* flashName() const { return flash_name_; }      // default is NULL
-    
-  public:
-    PIDOp();
 
   private:
     double setpoint_;

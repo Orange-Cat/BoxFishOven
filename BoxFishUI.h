@@ -23,7 +23,7 @@
 #include <String.h>
 
 // define to use the Adafruit LCD.
-#define BOXFISH_USE_ADAFRUIT_LCD
+#undef BOXFISH_USE_ADAFRUIT_LCD
 
 
 #ifdef BOXFISH_USE_ADAFRUIT_LCD  // BOXFISH_USE_ADAFRUIT_LCD is defined (or not) in BoxFishUI.h
@@ -51,6 +51,9 @@ static const unsigned long kDebouceDelay = 40;   // key debouce delay in millise
   
 class BoxFishUI : public LCD_CLASS {
   public:
+    BoxFishUI();
+
+  public:
     void begin(const char program_name[], const char program_version[], BoxFishMenuCallback callback);
     MenuItemRef getRootMenu();
     MenuItemRef getCurrentMenu();
@@ -69,10 +72,15 @@ class BoxFishUI : public LCD_CLASS {
     BoxFishButton lastButton();
 
     void softReset();   // software reset of microcontroller
-
-  public:
-    BoxFishUI();
-
+    
+  private:
+    static void menuChangeEventCallback(MenuChangeEvent changed);
+    static void menuUseEventCallback(MenuUseEvent used);
+    void menuDisplayMenu(const MenuItem& menu);
+    void lcdSetup();
+    void displaySplash();
+    BoxFishButton debounce(BoxFishButton button);
+    
   private:
     MenuBackend menu_;
     BoxFishButton button_state_;
@@ -82,14 +90,6 @@ class BoxFishUI : public LCD_CLASS {
     BoxFishMenuCallback callback_func_;
     const char* prog_name_;
     const char* prog_version_;
-    
-  private:
-    static void menuChangeEventCallback(MenuChangeEvent changed);
-    static void menuUseEventCallback(MenuUseEvent used);
-    static void menuDisplayMenu(const MenuItem& menu);
-    void lcdSetup();
-    void displaySplash();
-    BoxFishButton debounce(BoxFishButton button);
 };
 
 #endif // BOXFISH_UI_H

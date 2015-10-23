@@ -47,10 +47,10 @@
 
        
 // define to simulate temperature rises and falls in the oven, instead of reading the temperature sensor
-#undef BOXFISH_OVEN_SIMULATE
+#define BOXFISH_OVEN_SIMULATE
 
 
-const char kBoxFishOvenVersion[] = "1.4";
+const char kBoxFishOvenVersion[] = "1.5";
 const char kBoxFishOvenProgramName[] =  "BoxFishOven";
 
 // Pin assignments
