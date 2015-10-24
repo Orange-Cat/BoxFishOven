@@ -11,6 +11,7 @@
 #include "Arduino.h"
 #include "PIDSeq.h"
 
+
 PIDOp::PIDOp()
   :setpoint_(0.0),
   Kp_(0.0),
@@ -190,6 +191,7 @@ void PIDSeq::configPIDForCurrentOp()
     }
     else {
       ramp_start_ = process_;   // use existing process variable as ramp start
+      cur_setpoint_ = ramp_start_;
     }
     ramp_slope_ = (cur_op_->setpoint_ - process_) / cur_op_->ramp_sec_;
     ramp_time_start_ = millis();
