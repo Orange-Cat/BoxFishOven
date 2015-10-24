@@ -28,6 +28,8 @@ enum BoxFishMenuItem {
   kBoxFishMenuItemAcetal,
 
   kBoxFishMenuItemCureEpoxy80,
+
+  kBoxFishMenuItemDesiccantSilicaGel,
   
   kBoxFishMenuItemRapidCool,
   kBoxFishMenuItemReset
@@ -57,6 +59,10 @@ void buildMenus()
   static MenuItem mi_cure_epoxy80 = MenuItem(F("[Epoxy Staged 80]"));
   static MenuItem mi_cure_epoxy80_use = MenuItem(F("Run Epoxy Staged 80"), kBoxFishMenuItemCureEpoxy80);
   
+  static MenuItem mi_desiccant = MenuItem(F("[Desiccant]"));
+  static MenuItem mi_desiccant_silica_gel = MenuItem(F("[Silica Gel]"));
+  static MenuItem mi_desiccant_silica_gel_use = MenuItem(F("Run Silica Gel"), kBoxFishMenuItemDesiccantSilicaGel);
+    
   static MenuItem mi_rapid = MenuItem(F("[Rapid Cool]"));
   static MenuItem mi_rapid_use = MenuItem(F("Run Rapid Cool"), kBoxFishMenuItemRapidCool);
 
@@ -67,7 +73,7 @@ void buildMenus()
   static MenuItem mi_system_reset_use = MenuItem(F("Reset Controller"), kBoxFishMenuItemReset);
 
   // setup the menu hierarchy
-  root.add(mi_reflow).add(mi_anneal).add(mi_cure).add(mi_rapid).add(mi_system);
+  root.add(mi_reflow).add(mi_anneal).add(mi_cure).add(mi_desiccant).add(mi_rapid).add(mi_system);
 
   // configure the remaining menus
   mi_reflow.addRight(mi_reflow_lead).add(mi_reflow_lead_free);
@@ -81,6 +87,9 @@ void buildMenus()
 
   mi_cure.addRight(mi_cure_epoxy80);
   mi_cure_epoxy80.addRight(mi_cure_epoxy80_use);
+
+  mi_desiccant.addRight(mi_desiccant_silica_gel);
+  mi_desiccant_silica_gel.addRight(mi_desiccant_silica_gel_use);
   
   mi_rapid.addRight(mi_rapid_use);
 
@@ -131,6 +140,11 @@ void menuItemWasSelected(int item)
     case kBoxFishMenuItemCureEpoxy80:
       // ramp up slowly to 40C, hold for 60 minutes, ramp up slowly to 80C and hold for 180 minutes, then slow cool
       startEpoxy(40.0, 60.0, 80.0, 180.0);
+      break;
+
+    case kBoxFishMenuItemDesiccantSilicaGel:
+      // dry at 130C for 2 hrs (complete when cool at 50C)
+      startDry(130.0, 2*60);
       break;
 
     case kBoxFishMenuItemRapidCool:
@@ -274,6 +288,34 @@ void startEpoxy(double hold_temp1, unsigned long hold_minutes1, unsigned long ho
   // start the sequence
   ovenRun();
 }
+
+void startDry(double dry_temp, unsigned long hold_minutes)
+{
+  // ready for a new job
+  ovenBegin();
+  
+  double epsilon = 3.0;
+
+  // take temp up to dry temp and hold for hold_minutes
+  preheat.begin(dry_temp, 300.0, 0.03, 200.0);
+  preheat.setHoldTime(hold_minutes * 60uL);
+  preheat.setEpsilon(epsilon);
+  preheat.setControlLimits(0.0, kWindowSize);
+  preheat.setName(F("Drying"));
+  ovenSeq.addOp(preheat);
+  
+  // cool to 50C
+  cool.begin(50.0, 38, 0.008, 32);
+  cool.setEpsilon(epsilon);
+  cool.setReverse(true);
+  cool.setControlLimits(0.0, kBlowerPWMMax);
+  cool.setName(F("Cool"));
+  ovenSeq.addOp(cool);
+
+  // start the sequence
+  ovenRun();
+}
+
 
 void startRapidCool()
 {

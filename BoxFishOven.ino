@@ -3,7 +3,7 @@
 // Author: Orange Cat
 // Date: 23-10-2015
 // 
-// The BoxFishOven controller supports multiple reflow, annealing and curing profiles
+// The BoxFishOven controller supports multiple reflow, annealing, curing and drying profiles
 // selectable from the LCD display and a design that makes it easy to add new profiles
 // (see BoxFishProfiles to add new profiles.)
 //
@@ -49,7 +49,7 @@
 // define to simulate temperature rises and falls in the oven, instead of reading the temperature sensor
 #undef BOXFISH_OVEN_SIMULATE
 
-const char kBoxFishOvenVersion[] = "1.5";
+const char kBoxFishOvenVersion[] = "1.6";
 const char kBoxFishOvenProgramName[] =  "BoxFishOven";
 
 // Pin assignments
