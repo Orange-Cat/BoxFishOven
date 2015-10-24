@@ -49,7 +49,6 @@
 // define to simulate temperature rises and falls in the oven, instead of reading the temperature sensor
 #undef BOXFISH_OVEN_SIMULATE
 
-
 const char kBoxFishOvenVersion[] = "1.5";
 const char kBoxFishOvenProgramName[] =  "BoxFishOven";
 
@@ -142,14 +141,14 @@ void loop()
     nextRead += kSensorSampleTime;
   }
 
+  ui.menuNavigate();        // calls our menuItemWasSelected function if user wants to do something
+  pidControl();             // where we actually do all the control of the elements, blower and fan
+
   // time to update status?
   if (millis() > nextLog) {
     updateStatus();
     nextLog += kLogTime;
   }
-
-  ui.menuNavigate();        // calls our menuItemWasSelected function if user wants to do something
-  pidControl();             // where we actually do all the control of the elements, blower and fan
 
   // we abort if the user presses the select button (now emergency stop)
   if (ui.lastButton() == kBoxFishButtonSelect) {
