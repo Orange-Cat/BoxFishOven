@@ -1,7 +1,7 @@
 //
 // Title: BoxFishOven Profiles
 // Author: Orange Cat
-// Date: 23-10-2015
+// Date: 2015-11-11
 //
 // This sketch contains all the code necessary to add new profiles to BoxFishOven.
 //
@@ -175,6 +175,7 @@ void startReflow(double reflow_temperature)
 
   // ready for a new job
   ovenBegin();
+  setSerialLogSeconds(1);
 
   // preheat: raise temperature quickly to 150C
   preheat.begin(150.0, 112.0, 0.02, 252.0);
@@ -218,6 +219,7 @@ void startAnneal(double hold_temp, unsigned long ramp_up_minutes, unsigned long 
   
   // ready for a new job
   ovenBegin();
+  setSerialLogSeconds(60);
   
   double epsilon = 3.0;
 
@@ -237,14 +239,24 @@ void startAnneal(double hold_temp, unsigned long ramp_up_minutes, unsigned long 
   soak.setName(F("Hold"));
   ovenSeq.addOp(soak);
   
-  // cool to 30C at ramp_down_deg_hour degrees C/hr (note this is actually a heating cycle with decreasing setpoint)
-  unsigned long ramp_down_minutes = ((hold_temp - 30.0) * 60.0) / ramp_down_deg_hour + 0.5;
-  cool.begin(30.0, 300.0, 0.03, 200.0);
+  // cool to 40C at ramp_down_deg_hour degrees C/hr (note this is actually a heating cycle with decreasing setpoint)
+  unsigned long ramp_down_minutes = ((hold_temp - 40.0) * 60.0) / ramp_down_deg_hour + 0.5;
+  cool.begin(40.0, 300.0, 0.03, 200.0);
   cool.setRampTime(ramp_down_minutes * 60uL);
   cool.setEpsilon(epsilon);
   cool.setControlLimits(0.0, kWindowSize);
   cool.setName(F("Slow Cool"));
   ovenSeq.addOp(cool);
+
+  // cool actively to 30C at ramp_down_deg_hour degrees C/hr
+  ramp_down_minutes = ((40.0 - 30.0) * 60.0) / ramp_down_deg_hour + 0.5;
+  reflow.begin(30.0, 38, 0.008, 32);
+  reflow.setRampTime(ramp_down_minutes * 60uL);
+  reflow.setEpsilon(epsilon);
+  reflow.setReverse(true);
+  reflow.setControlLimits(0.0, kBlowerPWMMax);
+  reflow.setName(F("Active Cool"));
+  ovenSeq.addOp(reflow);
 
   // start the sequence
   ovenRun();
@@ -254,6 +266,7 @@ void startEpoxy(double hold_temp1, unsigned long hold_minutes1, unsigned long ho
 {
   // ready for a new job
   ovenBegin();
+  setSerialLogSeconds(60);
   
   double epsilon = 3.0;
 
@@ -293,6 +306,7 @@ void startDry(double dry_temp, unsigned long hold_minutes)
 {
   // ready for a new job
   ovenBegin();
+  setSerialLogSeconds(60);
   
   double epsilon = 3.0;
 
@@ -321,6 +335,7 @@ void startRapidCool()
 {
   // ready for a new job
   ovenBegin();
+  setSerialLogSeconds(1);
 
   // aggressively cool to 40.0C
   cool.begin(40.0 - 5.0, 38, 0.008, 32);

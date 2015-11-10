@@ -1,7 +1,7 @@
 //
 // Title: BoxFish UI
 // Author: Orange Cat
-// Date: 23-10-2015
+// Date: 2015-10-24
 //
 // BoxFishUI is a class to implement a consistent user interface on 2x16 line displays
 // it divides the display up into 3 parts. The top line is reserved for the menu system. The bottom line is split into left (info) and right (status).

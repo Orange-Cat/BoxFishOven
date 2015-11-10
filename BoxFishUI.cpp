@@ -1,7 +1,7 @@
 //
 // Title: BoxFish UI
 // Author: Orange Cat
-// Date: 23-10-2015
+// Date: 2015-10-23
 //
 // License:
 //   This firmware is released under the Creative Commons Attribution-ShareAlike 4.0

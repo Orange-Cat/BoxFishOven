@@ -1,7 +1,7 @@
 //
 // Title: BoxFishOven Controller
 // Author: Orange Cat
-// Date: 23-10-2015
+// Date: 2015-11-11
 // 
 // The BoxFishOven controller supports multiple reflow, annealing, curing and drying profiles
 // selectable from the LCD display and a design that makes it easy to add new profiles
@@ -45,11 +45,10 @@
   #include <LiquidCrystal.h>
 #endif
 
-       
 // define to simulate temperature rises and falls in the oven, instead of reading the temperature sensor
 #undef BOXFISH_OVEN_SIMULATE
 
-const char kBoxFishOvenVersion[] = "1.6";
+const char kBoxFishOvenVersion[] = "1.7";
 const char kBoxFishOvenProgramName[] =  "BoxFishOven";
 
 // Pin assignments
@@ -80,9 +79,10 @@ const double kBoxFishTemperatureError = -300.0;    // we use this temperature to
 // The control variable returned from the PID during heating will be between 0 (off) and kWindowSize (always on).
 const unsigned long kWindowSize = 2000;
 
-const unsigned long kLogTime = 1000;           // frequency for logging data to serial port (in milliseconds)
+const unsigned long kUpdateTime = 1000;        // frequency for updating lcd display (in milliseconds)
 const unsigned long kSensorSampleTime = 1000;  // frequency of sampling the temperature sensor (in milliseconds)
 const unsigned long kPIDSampleTime = 1000;     // frequency of PID calculations (in milliseconds)
+unsigned long jobLogSeconds = 1;   // seconds between serial logging events
 
 // PID variables
 double setpoint;             // current internal setpoint of PID
@@ -97,7 +97,7 @@ bool isCooling = false;
 bool isError = false;
 bool isFanFinished = true;
 
-unsigned long jobSeconds;    // seconds timer since start of job
+unsigned long jobLogNumber;     // the number of jobLogSeconds since start of job (normally seconds or minutes since job start)
 
 PIDSeq ovenSeq;   // the PID sequencer
 BoxFishUI ui;  // user interface
@@ -132,11 +132,11 @@ void setup()
 
 void loop()
 {
-  static unsigned long nextLog = millis();
+  static unsigned long nextUpdate = millis();
   static unsigned long nextRead = millis();
 
   // time to read thermocouple?
-  if (millis() > nextRead) {
+  if (millis() >= nextRead) {
     readThermocouple();
     nextRead += kSensorSampleTime;
   }
@@ -145,9 +145,9 @@ void loop()
   pidControl();             // where we actually do all the control of the elements, blower and fan
 
   // time to update status?
-  if (millis() > nextLog) {
+  if (millis() >= nextUpdate) {
     updateStatus();
-    nextLog += kLogTime;
+    nextUpdate += kUpdateTime;
   }
 
   // we abort if the user presses the select button (now emergency stop)
@@ -229,7 +229,8 @@ void displayTemperature(double temp)
 
 void updateStatus()
 {
-  // must be called exaclty once a second to update the LCD and the log writen to the serial port
+  // should be called exaclty once a second to update the LCD and update the serial log as needed
+  static unsigned long nextSerialLog = millis();
 
   // display the control system status
   String status_line = "";
@@ -248,37 +249,13 @@ void updateStatus()
   }
   ui.writeInfo(status_line);
   
-  // if oven is in use
   if (isRunning) {
-
-    // determine the percentage that the heater elements or blower is running at (100% == full power)
-    double percent_on;
-    if (isCooling) {
-      percent_on = control / kBlowerPWMMax * 100.0;
+    unsigned long now = millis();
+    if (now >= nextSerialLog) {
+      // oven is in use and it's time to write to the serial port
+      serialLog(status_line.c_str());
+      nextSerialLog = now + jobLogSeconds * 1000.0;
     }
-    else {
-      percent_on = control / kWindowSize * 100.0;
-    }
-
-    // we write a header to the serial port if it's the first time here
-    if (jobSeconds == 0) {
-      Serial.println(F("Time,Status,Setpoint,Temperature,Control Percent"));
-    }
-
-    // while the job is running we increase the seconds count for the job
-    jobSeconds++;
-
-    // now send timestamp, operation name, setpoint, temperature and control variable to the serial port
-    Serial.print(jobSeconds);
-    Serial.print(",");
-    Serial.print(status_line);
-    Serial.print(",");
-    Serial.print(setpoint);
-    Serial.print(",");
-    Serial.print(temperature);
-    Serial.print(",");
-    Serial.print(percent_on, 1);
-    Serial.println("");
   }
 
   if (isError) {
@@ -288,6 +265,39 @@ void updateStatus()
   else {
     displayTemperature(temperature);
   }
+}
+
+void serialLog(const char current_status[])
+{
+  // called normally every second or every minute only when job is running to log data to serial port
+
+  // we write a header to the serial port if it's the first time here
+  if (jobLogNumber == 0) {
+    Serial.println(F("Time,Status,Setpoint,Temperature,Control Percent"));
+  }
+
+  jobLogNumber++;
+
+  // determine the percentage that the heater elements or blower is running at (100% == full power)
+  double percent_on;
+  if (isCooling) {
+    percent_on = control / kBlowerPWMMax * 100.0;
+  }
+  else {
+    percent_on = control / kWindowSize * 100.0;
+  }
+
+  // now send timestamp, operation name, setpoint, temperature, and percent on to the serial port
+  Serial.print(jobLogNumber);
+  Serial.print(",");
+  Serial.print(current_status);
+  Serial.print(",");
+  Serial.print(setpoint);
+  Serial.print(",");
+  Serial.print(temperature);
+  Serial.print(",");
+  Serial.print(percent_on, 1);
+  Serial.println("");
 }
 
 #ifdef BOXFISH_OVEN_SIMULATE
@@ -423,13 +433,19 @@ void menuSetThickness()
   ui.redisplayCurrentMenu();
 }
 
+void setSerialLogSeconds(unsigned long seconds)
+{
+  // set seconds between serial logging events
+  jobLogSeconds = seconds;
+}
 
 void ovenBegin()
 {
   // display a message and reset the job timer
   ui.writeInfo(F("Start"));
   delay(1000);
-  jobSeconds  = 0;
+  jobLogNumber  = 0;
+  setSerialLogSeconds(1);  // default 1 second, profile can change this after calling ovenBegin()
 
   // we setup the oven PID sequencing and our sample time
   ovenSeq.begin();
