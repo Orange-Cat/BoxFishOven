@@ -423,6 +423,7 @@ void menuSetThickness()
         if (mmThickness > kThicknessIncrement) {
           mmThickness -= kThicknessIncrement;
         }
+        break;
 
       default:
         // do nothing

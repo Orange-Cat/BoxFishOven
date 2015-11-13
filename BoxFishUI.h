@@ -19,6 +19,7 @@
 #ifndef BOXFISH_UI_H
 #define BOXFISH_UI_H
 
+#include <Arduino.h>
 #include <MenuBackend.h>
 #include <String.h>
 
